@@ -4,6 +4,12 @@ class User_Table extends Core_Db_Table_Abstract
 {
 
 	/**
+	 * Хранит в себе response полученный от VK API
+	 * @var array
+	 */
+	public $data;
+
+	/**
 	 * @var string
 	 */
 	protected $_tableName = 'user';
@@ -11,45 +17,58 @@ class User_Table extends Core_Db_Table_Abstract
 	/**
 	 * @var string
 	 */
-	private $first_name;
+	public $first_name;
 
 	/**
 	 * @var string
 	 */
-	private $last_name;
+	public $last_name;
 
 	/**
 	 * @var string
 	 */
-	private $photo;
+	public $photo;
 
 	/**
 	 * @var string
 	 */
-	private $mobile_phone;
-
-	/**
-	 * @var string
-	 */
-	private $status;
-
-	public function beforeSave()
-    {
-        if ($this->getMobilePhone() == '')
-        {
-        	$this->setMobilePhone(NULL);
-        }
-    }
+	public $status;
 
     public function afterSave()
     {
-    	$friendsManager = Friends_Manager::getInstance();
+		$this->_addFriends();
+		$this->_addContact();
+    }
+
+    private function _addContact()
+    {
+    	$arrContactEnum = User_Contact_Enum::getInstance()->getAll();
+
+    	foreach ($arrContactEnum as $contactEnumKey => $contactEnumValue)
+    	{
+    		$type = strtolower($contactEnumKey);
+
+	    	if (!array_key_exists($type, $this->data))
+	    	{
+				continue;
+	    	}
+
+	    	User_Contact_Manager::getInstance()->add($this->id, $contactEnumValue, $this->data[$type]);
+    	}
+    }
+
+    /**
+     * Добавляет друзей в таблицу "user_friends" по текущему пользователю
+     */
+    private function _addFriends()
+    {
+		$userId = $this->id;
 
     	$vk = VK_VK::getInstance();
     	$friends = $vk->api(
     		'friends.get',
     		array(
-    			'user_id' => $this->getUid()
+    			'user_id' => $userId
     		)
     	);
 
@@ -60,123 +79,8 @@ class User_Table extends Core_Db_Table_Abstract
 
     	foreach ($friends['response'] as $friend)
     	{
-			$friendsManager->add($this->getUid(), $friend);
+    		User_Friends_Manager::getInstance()->add($userId, $friend);
     	}
-    }
-
-    /**
-     * Method to set the value of field id
-     *
-     * @param string $name
-     * @return $this
-     */
-    public function setFirstName($name)
-    {
-        $this->first_name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Method to set the value of field id
-     *
-     * @param string $name
-     * @return $this
-     */
-    public function setLastName($name)
-    {
-        $this->last_name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Method to set the value of field id
-     *
-     * @param string $url
-     * @return $this
-     */
-    public function setPhoto($url)
-    {
-        $this->photo = $url;
-
-        return $this;
-    }
-
-    /**
-     * Method to set the value of field id
-     *
-     * @param string $numbers
-     * @return $this
-     */
-    public function setMobilePhone($nubmers)
-    {
-        $this->mobile_phone = $nubmers;
-
-        return $this;
-    }
-
-    /**
-     * Method to set the value of field id
-     *
-     * @param string $numbers
-     * @return $this
-     */
-    public function setStatus($status)
-    {
-        $this->status = $status;
-
-        return $this;
-    }
-
-    /**
-     * Returns the value of field id
-     *
-     * @return string
-     */
-    public function getFirstName()
-    {
-        return $this->first_name;
-    }
-
-    /**
-     * Returns the value of field id
-     *
-     * @return string
-     */
-    public function getLastName()
-    {
-        return $this->last_name;
-    }
-
-    /**
-     * Returns the value of field id
-     *
-     * @return string
-     */
-    public function getPhoto()
-    {
-        return $this->photo;
-    }
-
-    /**
-     * Returns the value of field id
-     *
-     * @return string
-     */
-    public function getMobilePhone()
-    {
-        return $this->mobile_phone;
-    }
-
-    /**
-     * Returns the value of field id
-     *
-     * @return string
-     */
-    public function getStatus()
-    {
-        return $this->status;
     }
 
 }

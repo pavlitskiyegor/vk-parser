@@ -11,21 +11,19 @@ class User_Manager extends Core_Model_Manager
      * @param string $lastName
      * @param string $description
      */
-    public function add($uid, $firstName, $lastName, $photo, $mobilePhone, $status)
+    public function add($uid, $firstName, $lastName, $photo, $status, $data)
     {
 
 		$row = User_Table::findFirst($uid);
 
 		$row = $row ? $row : (new User_Table());
 
-		$row
-			->setId($uid)
-			->setFirstName($firstName)
-			->setLastName($lastName)
-			->setPhoto($photo)
-			->setMobilePhone($mobilePhone)
-			->setStatus($status)
-			->save()
-		;
+		$row->data 			= $data;
+		$row->id 			= $uid;
+		$row->first_name 	= $firstName;
+		$row->last_name 	= $lastName;
+		$row->photo 		= $photo;
+		$row->status 		= $status;
+		$row->save();
     }
 }
