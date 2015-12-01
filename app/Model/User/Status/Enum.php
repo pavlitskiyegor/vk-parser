@@ -1,5 +1,5 @@
 <?php
-class User_Status_Enum
+class User_Status_Enum extends Core_Enum_Abstract
 {
 	const NORMAL = 1;
 
