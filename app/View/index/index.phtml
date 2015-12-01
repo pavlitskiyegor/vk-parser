@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ProgressLoader</title>
+<script type="text/javascript">
+function ProgressLoader(url, callbacks)
+{
+var _this = this;
+for (var k in callbacks)
+	if (typeof callbacks[k] != 'function')
+		callbacks[k] = false;
+delete k;
+
+function getXHR()
+	{
+	var xhr;
+	try
+		{
+		xhr = new ActiveXObject("Msxml2.XMLHTTP");
+		}
+	catch (e)
+		{
+		try
+			{
+			xhr = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+		catch (E)
+			{
+			xhr = false;
+			}
+		}
+	if (!xhr && typeof XMLHttpRequest != 'undefined')
+		xhr = new XMLHttpRequest();
+	return xhr;
+	}
+
+this.xhr = getXHR();
+this.xhr.open('GET', url, true);
+
+var contentLoading = false,
+	progressMax = -1,
+	progress = 0,
+	progressPerc = 0;
+
+this.xhr.onreadystatechange = function()
+	{
+	if (this.readyState == 2)
+		{
+		contentLoading = false;
+		progressMax = +this.getResponseHeader('X-Progress-Max') || progressMax;
+		if (callbacks.start)
+			callbacks.start.call(_this, this.status);
+		}
+	else if (this.readyState == 3)
+		{
+// 		if (!contentLoading)
+// 			contentLoading = !!this.responseText
+// 				.replace(/^\s+/, '');	// .trimLeft() — медленнее О_о
+
+		if (!contentLoading)
+			{
+			console.log(this.responseText)
+			progress = this.responseText.length;
+			progressPerc = progressMax > 0 ? progress / progressMax : -1;
+			if (callbacks.progress)
+				{
+				callbacks.progress.call(_this,
+					this.status,
+					progress,
+					progressPerc,
+					progressMax
+					);
+				}
+			}
+		else if (callbacks.loading)
+			callbacks.loading.call(_this, this.status, this.responseText);
+		}
+	else if (this.readyState == 4)
+		{
+		if (callbacks.end)
+			callbacks.end.call(_this, this.status, this.responseText);
+		}
+	};
+if (callbacks.abort)
+	this.xhr.onabort = callbacks.abort;
+
+this.xhr.send(null);
+
+this.abort = function()
+	{
+	return this.xhr.abort();
+	};
+
+this.getProgress = function()
+	{
+	return progress;
+	};
+
+this.getProgressMax = function()
+	{
+	return progressMax;
+	};
+
+this.getProgressPerc = function()
+	{
+	return progressPerc;
+	};
+
+return this;
+}
+</script>
+<style>
+progress, button {
+	display: inline-block;
+	vertical-align: middle;
+	padding: 0.4em 2em;
+	margin-right: 2em;
+}
+</style>
+</head>
+<body>
+<progress id="progressbar" value="0" max="0" style="display: none;"></progress>
+<button id="start">Start/Stop</button>
+<script>
+
+var progressbar = document.getElementById('progressbar'),
+	btnStart = document.getElementById('start'),
+	worker = false;
+
+btnStart.onclick = function()
+	{
+	if (!worker)
+		{
+		var url = 'parser/run';
+		worker = new ProgressLoader(url, {
+			start: function(status)
+				{
+				progressbar.style.display = 'inline-block';
+				},
+			progress: function(status, progress, progressPerc, progressMax)
+				{
+				console.log(status, progress, progressPerc, progressMax)
+				progressbar.value = +progressbar.max * progressPerc;
+				},
+			end: function(status, s)
+				{
+				progressbar.style.display = 'none';
+				worker = false;
+				},
+			});
+		}
+	else
+		{
+		worker.abort();
+		progressbar.style.display = 'none';
+		worker = false;
+		}
+	};
+
+</script>
+</body>
+</html>
