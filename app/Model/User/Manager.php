@@ -14,15 +14,12 @@ class User_Manager extends Core_Model_Manager
     public function add($uid, $firstName, $lastName, $photo, $mobilePhone, $status)
     {
 
-		$row = User_Table::findFirst(array(
-	    			"conditions" => "uid = '$uid'"
-	    		)
-		);
+		$row = User_Table::findFirst($uid);
 
 		$row = $row ? $row : (new User_Table());
 
 		$row
-			->setUid($uid)
+			->setId($uid)
 			->setFirstName($firstName)
 			->setLastName($lastName)
 			->setPhoto($photo)

@@ -9,11 +9,6 @@ class User_Table extends Core_Db_Table_Abstract
 	protected $_tableName = 'user';
 
 	/**
-	 * @var integer
-	 */
-	private $uid;
-
-	/**
 	 * @var string
 	 */
 	private $first_name;
@@ -40,8 +35,7 @@ class User_Table extends Core_Db_Table_Abstract
 
 	public function beforeSave()
     {
-    	$number = str_replace('+', '', $this->getMobilePhone());
-        if (!preg_match("/^[0-9]{10,11}+$/", $number))
+        if ($this->getMobilePhone() == '')
         {
         	$this->setMobilePhone(NULL);
         }
@@ -59,25 +53,15 @@ class User_Table extends Core_Db_Table_Abstract
     		)
     	);
 
-    	if (!array_key_exists('response', $friends)) return;
+    	if (!array_key_exists('response', $friends))
+    	{
+    		return;
+    	}
 
-    	foreach ($friends as $friend)
+    	foreach ($friends['response'] as $friend)
     	{
 			$friendsManager->add($this->getUid(), $friend);
     	}
-    }
-
-    /**
-     * Method to set the value of field id
-     *
-     * @param integer $uid
-     * @return $this
-     */
-    public function setUid($uid)
-    {
-        $this->uid = $uid;
-
-        return $this;
     }
 
     /**
@@ -143,16 +127,6 @@ class User_Table extends Core_Db_Table_Abstract
         $this->status = $status;
 
         return $this;
-    }
-
-    /**
-     * Returns the value of field id
-     *
-     * @return integer
-     */
-    public function getUid()
-    {
-        return $this->uid;
     }
 
     /**
