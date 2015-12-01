@@ -1,6 +1,6 @@
 <?php
 
-class Friends_Manager extends Core_Model_Manager
+class User_Friends_Manager extends Core_Model_Manager
 {
 
     use Core_Singleton;
@@ -11,12 +11,10 @@ class Friends_Manager extends Core_Model_Manager
      */
     public function add($user1, $user2)
     {
-		$row = new Friends_Table();
+		$row = new User_Friends_Table();
 
-		$row
-			->setUser1($user1)
-			->setUser2($user2)
-			->save()
-		;
+		$row->user1 = $user1;
+		$row->user2 = $user2;
+		$row->save();
     }
 }
